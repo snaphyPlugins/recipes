@@ -22,6 +22,13 @@ module.exports = function(server, databaseObj, helper, packageObj) {
         //Initialize the analytics..
         recipeAnalytics.init(server, databaseObj, helper, packageObj);
         orderManagement.init(server, databaseObj, helper, packageObj);
+
+        var data = server.models();
+        for(var key in data){
+            if(data.hasOwnProperty(key)){
+                console.log(data[key].modelName);
+            }
+        }
     };
 
 

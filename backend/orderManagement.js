@@ -69,8 +69,8 @@ var requestOtp = function(server, databaseObj, helper, packageObj) {
 
 
 orderValidation = function(server, databaseObj, helper, packageObj) {
-    var Order = databaseObj.Order,
-    mail = helper.loadPlugin('email');
+    var Order = databaseObj.Order;
+    //var mail = helper.loadPlugin('email');
 
     Order.orderWithOTP = function(order, orderDetails, code, callback) {
             var err = new Error('Sorry, but that verification code does not work!');
@@ -188,18 +188,20 @@ orderValidation = function(server, databaseObj, helper, packageObj) {
 
 
 
+
                                             //Now find the customer for order..
                                             var Customer = server.models.Customer;
                                             Customer.findById(order.customerId, function(err, customer){
                                                 if(err){
                                                     console.error(err);
                                                 }else{
-                                                    if(customer) {
+                                                    if(customer){
                                                         //Now attach customer to the order..
                                                         order.customer = customer;
                                                         order.id = orderInstance.id;
+                                                        //Warning dont import email module..
                                                         //Now send email.. to server..
-                                                        mail.adminEmail.sendOrder(" 'Gruberr' <rohitbasu2050@gmail.com>", packageObj.newOrderMail, "A new order has arrived.",
+                                                        server.models.adminEmail.sendOrder(" 'Rohit Basu' <rohitbasu2050@gmail.com>", packageObj.newOrderMail, "A new order has arrived.",
                                                             {
                                                                 'title': 'Gruberr Ingredients',
                                                                 'order': order,
@@ -214,6 +216,7 @@ orderValidation = function(server, databaseObj, helper, packageObj) {
                                                                 }
 
                                                             });
+
                                                     }
 
                                                 }
@@ -248,7 +251,7 @@ orderValidation = function(server, databaseObj, helper, packageObj) {
                     required: true
                 }, {
                     arg: 'orderDetails',
-                    type: "array",
+                    type: ["object"],
                     required: true
                 }, {
                     arg: 'code',

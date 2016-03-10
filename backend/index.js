@@ -3,7 +3,7 @@ module.exports = function(server, databaseObj, helper, packageObj) {
     var recipeAnalytics = require('./addRecipeAnalytics');
     //var addSecurity  = require('./addSecurity');
     //var async = require('async');
-    //var _ = require("lodash");
+    var _ = require("lodash");
     var orderManagement = require("./orderManagement");
     /**
      * Here server is the main app object
@@ -31,35 +31,80 @@ module.exports = function(server, databaseObj, helper, packageObj) {
         var Recipe = databaseObj.Recipe;
         var Category = databaseObj.Category;
 
-        Recipe.findCategoryRecipes = function(categoryId, myfilter, callback){
-            //console.log("============ORIGINAL FILTER============", myfilter);
+        Recipe.findCategoryRecipes = function(categoryId, recipeFilter, cuisinesId, callback){
+            //console.log(myfilter.where.cuisines_);
             //first fetch the category..
+
+            console.log(categoryId, recipeFilter, cuisinesId);
+
             Category.findById(categoryId, {})
                 .then(function(categoryInstance){
+                    categoryInstance.recipes({
+                        include: "cuisines"
+                    })
+                        .then(function(recipesList){
+                            if(recipesList){
+                                if(recipesList.length){
+                                    if(cuisinesId) {
+                                        if(cuisinesId.length){
+                                            var filterValue = _.filter(recipesList, function (recipe) {
+                                                var JSONRecipe = recipe.toJSON();
 
-                    if(categoryInstance){
-                        if(myfilter.where === undefined){
-                            myfilter.where  = {};
-                        }
+                                                if (JSONRecipe.cuisines){
+                                                    var JSONCuisines = JSONRecipe.cuisines.toJSON();
+                                                    console.log("i ammm");
+                                                    if (JSONCuisines.length) {
+                                                        var found = false;
 
-                        //Add category ref in my filter..
-                        myfilter.where.category_ = categoryInstance.id;
-                        Recipe.find(myfilter)
-                            .then(function(recipes){
-                                console.log(myfilter.where);
-                                //console.log(recipes);
-                                callback(null, recipes);
-                            })
-                            .catch(function(err){
-                                console.error(err);
-                                callback(err);
-                            });
-                    }else{
-                        callback(new Error("No category found"));
-                        console.error("Category not found");
-                    }
+                                                        for (var i = 0; i < JSONRecipe.cuisines.length; i++) {
+                                                            var cuisineObj = JSONRecipe.cuisines[i];
+                                                            console.log("i am hereee", recipe.cuisines);
+                                                            if(cuisineObj){
+                                                                for (var j = 0; j < cuisinesId.length; j++) {
+                                                                    var targetId = cuisinesId[j];
+                                                                    //console.log(targetId, cuisineObj.id);
+                                                                    if (targetId.toString() === cuisineObj.id.toString()) {
+                                                                        found = true;
+                                                                        break;
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            if (found) {
+                                                                break;
+                                                            }
+                                                        }
+                                                        return found;
+                                                    } else {
+                                                        return false;
+                                                    }
+
+                                                } else {
+                                                    return false;
+                                                }
+                                            });
+
+                                            console.log("Now returnning\n");
+                                            callback(null, filterValue);
+                                        }else{
+                                            return callback(null, recipesList);
+                                        }
+                                    }else{
+                                        return callback(null, recipesList);
+                                    }
+                                }else{
+                                    callback(null, []);
+                                }
+                            }else{
+                                callback(null, []);
+                            }
+                        })
+                        .catch(function(err){
+                            console.error(err);
+                        });
                 })
                 .catch(function(err){
+
                     console.error(err);
                     callback(err);
                 });
@@ -70,13 +115,18 @@ module.exports = function(server, databaseObj, helper, packageObj) {
             'findCategoryRecipes', {
                 accepts:[ {
                     arg: 'categoryId',
-                    type: 'string',
-                    required: true
+                    type: 'string'
+
                 },
                 {
-                    arg: 'filter',
-                    type: 'object',
-                    required: true
+                    arg: 'recipeFilter',
+                    type: 'object'
+
+                },
+                {
+                    arg: 'cuisinesId',
+                    type: 'array'
+
                 }],
                 returns: {
                     arg: 'data',

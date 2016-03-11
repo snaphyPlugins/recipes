@@ -173,24 +173,6 @@ function capitalizeEachWord(str) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 module.exports = {
     init: init
 };

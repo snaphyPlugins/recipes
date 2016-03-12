@@ -41,15 +41,6 @@ var init = function(server, databaseObj, helper, packageObj) {
             //console.error("Error recipe data is not present");
             return next();
         }
-    /*    var loopback = helper.getLoopbackObj();
-        //Check is user is Admin..
-        var login = helper.loadPlugin('login');
-        var currentContext = loopback.getCurrentContext();
-        //first check is the user is not admin..
-        login.isAdmin(server, currentContext, function(err, value){
-            console.log(err);
-            console.log(value);
-        });*/
 
         var RecipeId = ctx.instance.recipeId;
         //Now increase a recipe views..
@@ -71,7 +62,7 @@ var init = function(server, databaseObj, helper, packageObj) {
                 }
                 recipeAnalyticObj.totalViews = parseInt(recipeAnalyticObj.totalViews) + 1;
                 //Now save the ingredients..
-                recipeAnalyticObj.save({}, function(err, object) {
+                recipeAnalyticObj.updateAttribute('totalViews', recipeAnalyticObj.totalViews,  function(err, object) {
                     if (err) {
                         console.log("Error fetching recipe ingredients data.");
                         console.error(err);
@@ -87,13 +78,15 @@ var init = function(server, databaseObj, helper, packageObj) {
 
 
     //When a comment is created increment ratings and comment value..of analytics..
-    databaseObj.Comments.observe('after save', function(ctx, next) {
-        if (ctx.isNewInstance) {
-            if(ctx.instance){
+    databaseObj.Comments.observe('before save', function(ctx, next) {
+        var instance = ctx.instance || ctx.data;
+        if(instance){
+            if(instance.recipeId){
                 //Now increment comment and ratings value..
                 databaseObj.RecipeAnalytic.find({
                     where:{
-                        recipeId: ctx.instance.recipeId
+                        recipeId: instance.recipeId,
+                        "status": "publish"
                     }
                 }, function(err, recipeAnalyticObj){
 
@@ -109,36 +102,50 @@ var init = function(server, databaseObj, helper, packageObj) {
                         console.error("No recipe analytics data model present");
                         return next();
                     }
+                    var averageRating;
+                    var totalComment;
+                    if(ctx.isNewInstance){
+                        //Now calculate the average ratings..
+                        var totalRating = (parseInt(recipeAnalyticObj.totalComment) * parseInt(recipeAnalyticObj.averageRating));
+                        //now increment comment..
+                        totalComment  =  parseInt(recipeAnalyticObj.totalComment) + 1;
+                        //Now add this comment rating..
+                        if(instance.rating !== undefined){
+                            totalRating = totalRating + parseInt(instance.rating);
+                            //Now calculate average. rating..
+                            averageRating = totalRating / recipeAnalyticObj.totalComment;
+                        }//if
 
-                    //Now calculate the average ratings..
-                    var totalRating = (parseInt(recipeAnalyticObj.totalComment) * parseInt(recipeAnalyticObj.averageRating) )
-                    //now increment comment..
-                    recipeAnalyticObj.totalComment  =  parseInt(recipeAnalyticObj.totalComment) + 1;
-                    //Now add this comment rating..
-                    if(ctx.instance.rating !== undefined){
-                        totalRating = totalRating + parseInt(ctx.instance.rating);
-                        //Now calculate average. rating..
-                        var avgRating = totalRating / recipeAnalyticObj.totalComment;
-                        recipeAnalyticObj.averageRating = avgRating;
-                    }//if
+                    }else{
+                        //First find the previous value..
+                        databaseObj.Comments.findById(instance.id, {})
+                            .then(function(value){
+                                if(value){
+                                    if(value.status === "publish"){
 
+                                    }
+                                }
+                            })
+                            .catch(function(err){
+                                console.error(err);
+                            });
+                    }
+
+                    //updateAttributes({name: 'value'}, cb)
                     //Now save the data..
-                    recipeAnalyticObj.save({}, function(err, obj){
+                    recipeAnalyticObj.updateAttributes({averageRating: averageRating, totalComment: totalComment}, function(err, obj){
                         if(err){
                             console.error("Error in Recipe analytics total comment and rating incrementing..");
 
                         }else{
                             //done incrementing value..
-                            //
+                            console.log("Avg ratings updated.");
                         }
                     });
 
                     //Now call the next middleware..
                     next();
                 });// find RecipeAnalytic
-
-            }else{
-                next();
             }
         }else{
             next();
@@ -152,4 +159,4 @@ var init = function(server, databaseObj, helper, packageObj) {
 
 module.exports = {
     init: init
-}
+};

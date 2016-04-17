@@ -55,7 +55,7 @@ var requestOtp = function(server, databaseObj, helper, packageObj) {
             // Note that you’ll want to change the secret to something a lot more secure!
             var code = speakeasy.totp({
                 key: packageObj.SECRET_CODE + number,
-                length: 4,
+                digits: 4,
                 step: 300
             });
 
@@ -115,7 +115,7 @@ orderValidation = function(server, databaseObj, helper, packageObj) {
 
                     var actualCode = speakeasy.totp({
                         key: packageObj.SECRET_CODE + number.toString(),
-                        length: 4,
+                        digits: 4,
                         step: 300
                     });
 
@@ -284,7 +284,7 @@ orderValidation = function(server, databaseObj, helper, packageObj) {
                     arg: 'code',
                     type: 'string',
                     required: true
-                }, ],
+                }],
                 description: "Order by OTP verification of  Gruberr App",
                 returns: {
                     arg: 'order',

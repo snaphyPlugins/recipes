@@ -40,9 +40,8 @@ module.exports = function(server, databaseObj, helper, packageObj) {
 
     var addRecipeFilter = function(){
         var Recipe = databaseObj.Recipe;
-
         Recipe.findCategoryRecipes = function(categoryId, recipeFilter, cuisinesId, callback){
-           // where: {"recipes_.5698e49c53196bcc07fd7db7": true}
+            // where: {"recipes_.5698e49c53196bcc07fd7db7": true}
             var filter;
             if(recipeFilter){
                 filter = recipeFilter || {};

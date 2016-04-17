@@ -1,7 +1,9 @@
 'use strict';
 var init = function(server, databaseObj, helper, packageObj) {
     //When a recipe is created add a analytics with recipe..
-    databaseObj.Recipe.observe('after save', function(ctx, next) {
+    databaseObj.Recipe.observe('before save', function(ctx, next) {
+        var instance = ctx.instance || ctx.data;
+
         if (ctx.isNewInstance) {
             var data = {
                 totalViews: 0,
@@ -10,14 +12,15 @@ var init = function(server, databaseObj, helper, packageObj) {
             };
 
 
-            if (ctx.instance) {
 
-                if(ctx.instance.status){
-                    data.status = ctx.instance.status;
+            if (instance) {
+
+                if(instance.status){
+                    data.status = instance.status;
                 }
 
                 //Create a RecipeAnalytics..
-                ctx.instance.recipeAnalytics.create(data, function(err, analyticsObj) {
+                instance.recipeAnalytics.create(data, function(err, analyticsObj) {
                     if (err) {
                         console.error(err);
                         return false;
@@ -27,10 +30,10 @@ var init = function(server, databaseObj, helper, packageObj) {
 
                     //Analytics successfully added to recipe..
                     //Add analytic for two way communication..
-                    //ctx.instance.recipeAnalyticId = analyticsObj.id;
+                    //instance.recipeAnalyticId = analyticsObj.id;
                     //Resave it..
                     //updateAttributes({name: 'value'}, cb)
-                    ctx.instance.updateAttributes(updateValue, function(err, val){
+                    instance.updateAttributes(updateValue, function(err, val){
                         if(err){
                             console.error("Data cannot be saved..");
                             return false;
@@ -42,16 +45,16 @@ var init = function(server, databaseObj, helper, packageObj) {
             }
             next();
         } else {
-            //Just update recipe status to ctx.instance..
+            //Just update recipe status to instance..
             var RecipeAnalytic = databaseObj.RecipeAnalytic;
-            if(ctx.instance){
-                if(ctx.instance.recipeAnalyticId){
+            if(instance){
+                if(instance.recipeAnalyticId){
                     //Now update the value..
                     //First get the value..
-                    RecipeAnalytic.findById(ctx.instance.recipeAnalyticId, {})
+                    RecipeAnalytic.findById(instance.recipeAnalyticId, {})
                         .then(function(recipeAnalyticObj){
-                            if(ctx.instance.status){
-                                recipeAnalyticObj.updateAttribute("status", ctx.instance.status , function(err, val){
+                            if(instance.status){
+                                recipeAnalyticObj.updateAttribute("status", instance.status , function(err, val){
                                     if(err){
                                         console.error("Data cannot be saved..");
                                         return false;
@@ -62,6 +65,7 @@ var init = function(server, databaseObj, helper, packageObj) {
                             }
                         })
                         .catch(function(err){
+                            console.error("Error updating recipeAnalytic status on recipe save. 'recipe/backend/addRecipeAnalytics.js page'");
                             console.error(err);
                         });
                 }

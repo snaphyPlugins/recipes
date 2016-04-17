@@ -54,7 +54,7 @@ var requestOtp = function(server, databaseObj, helper, packageObj) {
 
             // Note that you’ll want to change the secret to something a lot more secure!
             var code = speakeasy.totp({
-                key: packageObj.SECRET_CODE + number,
+                secret: packageObj.SECRET_CODE + number,
                 digits: 4,
                 step: 300
             });
@@ -114,7 +114,7 @@ orderValidation = function(server, databaseObj, helper, packageObj) {
                     }
 
                     var actualCode = speakeasy.totp({
-                        key: packageObj.SECRET_CODE + number.toString(),
+                        secret: packageObj.SECRET_CODE + number.toString(),
                         digits: 4,
                         step: 300
                     });

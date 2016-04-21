@@ -5,37 +5,48 @@
 //Phone Message sending module...
 var https = require('https');
 
-var send = function(message, number, callback){
-	//matching the number..
+
+
+var send = function(message, number, callback) {
+    //matching the number..
     var patt = /\+\d{12,12}/;
+    //remove 0 from the number
+    number = number.replace(/^0/, "");
     var match = number.match(patt);
-    if(!match){
+    if (!match) {
         number = "+91" + number;
     }
+    
 
-	var apiKey = "a8147ba9";
-	var apiSecret = "14ba38cb";
-	var data = 'https://rest.nexmo.com' +
-	      '/sms/json?api_key=' + apiKey + '&api_secret=' + apiSecret +
-	      '&from=Gruberr&to='+ number +
-	      '&text=' + message;
-	https.get(
-	  data,
-	  function(res) {
-	    res.on('data', function(data) {
-	      // all done! handle the data as you need to
-	      console.log("Message sent");
-	      //console.log(data);
-	      callback(null, data);
-	    });
-	  }
-	).on('error', function(err) {
-		console.log("Error sending push message to the server.");
-		//console.error(err);
-	    // handle errors somewhow
-	    callback(err, null);
-	});
+    var apiKey = "110460AQlVyIXa5UH57187b0d";
+    /*var apiSecret = "14ba38cb";
+    var data = 'https://rest.nexmo.com' +
+        '/sms/json?api_key=' + apiKey + '&api_secret=' + apiSecret +
+        '&from=Mapstrack&to=' + number +
+        '&text=' + message;*/
+
+    var data = "https://control.msg91.com/api/sendhttp.php?"+
+        "authkey="+ apiKey +
+        "&mobiles="+ number + 
+        "&message=" + message + "&sender=GRBERR&route=4&country=0";
+    https.get(
+        data,
+        function(res) {
+            res.on('data', function(data) {
+                // all done! handle the data as you need to
+                console.log("Message sent");
+                //console.log(data);
+                callback(null, data);
+            });
+        }
+    ).on('error', function(err) {
+        console.log("Error sending push message to the server.");
+        //console.error(err);
+        // handle errors somewhow
+        callback(err, null);
+    });
 };
+
 
 
 

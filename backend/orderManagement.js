@@ -51,7 +51,6 @@ var requestOtp = function(server, databaseObj, helper, packageObj) {
             }
 
             //var code = notp.totp.gen(key, opt)
-
             // Note that you’ll want to change the secret to something a lot more secure!
             var code = speakeasy.totp({
                 secret: packageObj.SECRET_CODE + number,
@@ -61,6 +60,7 @@ var requestOtp = function(server, databaseObj, helper, packageObj) {
 
             console.log('Sending code for verification process : ' + code);
             var message = "Verification code for Gruberr application is : " + code;
+            
             // [TODO] hook into your favorite SMS API and send your user their code!
             //Now sending the verification code to the app
 
@@ -223,6 +223,16 @@ orderValidation = function(server, databaseObj, helper, packageObj) {
                                                     console.error(err);
                                                 }else{
                                                     if(customer){
+                                                        //Now also update the phoneNumber at customer end..
+                                                        //persistedModel.updateAttribute(name, value, callback)
+                                                        customer.updateAttribute('phoneNumber', order.phoneNumber, function(err, customer){
+                                                            if(err){
+                                                                console.error(err);
+                                                            }else{
+                                                                //phoneNumber updated..
+                                                            }
+                                                        });
+                                                        
                                                         //Now attach customer to the order..
                                                         order.customer = customer;
                                                         order.id = orderInstance.id;

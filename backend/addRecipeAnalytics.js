@@ -1,7 +1,7 @@
 'use strict';
 var init = function(server, databaseObj, helper, packageObj) {
     //When a recipe is created add a analytics with recipe..
-    databaseObj.Recipe.observe('before save', function(ctx, next) {
+    databaseObj.Recipe.observe('after save', function(ctx, next) {
         var instance = ctx.instance || ctx.data;
 
         if (ctx.isNewInstance) {
